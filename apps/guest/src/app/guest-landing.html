@@ -64,8 +64,8 @@
           </span>
         </label>
 
-        @if (devMode && challenge()?.devCode) {
-          <p class="dev"><i class="pi pi-info-circle" aria-hidden="true"></i> Development: no SMS is sent. Your code is <strong>{{ challenge()!.devCode }}</strong></p>
+        @if (challenge()?.devCode; as demoCode) {
+          <p class="dev"><i class="pi pi-info-circle" aria-hidden="true"></i> Demo: no SMS is sent. Your code is <strong>{{ demoCode }}</strong></p>
         }
         @if (error()) { <p class="err-box" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p> }
 

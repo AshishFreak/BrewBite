@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, input, isDevMode, signal, viewChild } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { Clock, CustomerAuth, OTP_RESEND_MS, OtpChallenge, RestaurantApi } from '@ros/shared/data-access';
 import { DiningTable, maskPhone, normalizeIndianMobile } from '@ros/shared/domain';
 import { Notifier, RosButton } from '@ros/shared/ui';
@@ -19,7 +19,6 @@ export class GuestLanding {
   private readonly notifier = inject(Notifier);
 
   protected readonly cafe = this.api.cafe;
-  protected readonly devMode = isDevMode();
   protected readonly slots = [0, 1, 2, 3, 4, 5];
 
   protected readonly step = signal<'phone' | 'otp'>('phone');

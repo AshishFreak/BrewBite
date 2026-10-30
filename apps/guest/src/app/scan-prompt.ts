@@ -1,6 +1,6 @@
-import { Component, inject, isDevMode } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { RestaurantApi } from '@ros/shared/data-access';
+import { DEMO_MODE, RestaurantApi } from '@ros/shared/data-access';
 
 /** Landing for `/` with no table token: guests should arrive by scanning a table QR code. */
 @Component({
@@ -11,9 +11,9 @@ import { RestaurantApi } from '@ros/shared/data-access';
       <div class="icon" aria-hidden="true"><i class="pi pi-qrcode"></i></div>
       <h1>Scan the QR code on your table</h1>
       <p>Point your phone camera at the code on the table to open the menu and order.</p>
-      @if (devMode) {
-        <section class="dev" aria-label="Development shortcuts">
-          <h2>Development: open a table</h2>
+      @if (demoMode) {
+        <section class="dev" aria-label="Demo shortcuts">
+          <h2>Demo: open a table</h2>
           <div class="tables">
             @for (t of api.tables(); track t.id) { <a [routerLink]="['/t', t.code]">{{ t.code }}</a> }
           </div>
@@ -34,5 +34,5 @@ import { RestaurantApi } from '@ros/shared/data-access';
 })
 export class ScanPrompt {
   protected readonly api = inject(RestaurantApi);
-  protected readonly devMode = isDevMode();
+  protected readonly demoMode = inject(DEMO_MODE);
 }

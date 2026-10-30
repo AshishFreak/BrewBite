@@ -1,8 +1,8 @@
-import { Component, inject, isDevMode, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService, DEMO_ACCOUNTS, RestaurantApi } from '@ros/shared/data-access';
+import { AuthService, DEMO_ACCOUNTS, DEMO_MODE, RestaurantApi } from '@ros/shared/data-access';
 import { canOpenApp, homeApp, ROLE_LABEL, STAFF_APP_LABEL, StaffUser } from '@ros/shared/domain';
 import { RosButton } from '@ros/shared/ui';
 import { STAFF_APP, STAFF_APP_URLS } from './staff-app';
@@ -47,7 +47,7 @@ import { STAFF_APP, STAFF_APP_URLS } from './staff-app';
           <ros-button type="submit" label="Sign in" size="large" fluid [loading]="busy()" [disabled]="!username() || !password()" />
         </form>
 
-        @if (devMode) {
+        @if (demoMode) {
           <div class="demo">
             <h2>Demo accounts <small>password <code>demo123</code></small></h2>
             <div class="accounts">
@@ -100,7 +100,7 @@ export class LoginPage {
   protected readonly appLabel = STAFF_APP_LABEL[this.app];
   protected readonly roleLabel = ROLE_LABEL;
   protected readonly accounts = DEMO_ACCOUNTS;
-  protected readonly devMode = isDevMode();
+  protected readonly demoMode = inject(DEMO_MODE);
   protected readonly username = signal('');
   protected readonly password = signal('');
   protected readonly showPassword = signal(false);
