@@ -1,0 +1,86 @@
+<div class="landing">
+  <section class="hero">
+    <span class="logo" aria-hidden="true">☕</span>
+    <h1>Welcome to {{ cafe().name }}</h1>
+    <p>{{ cafe().tagline }}</p>
+    <span class="table-pill"><i class="pi pi-map-marker" aria-hidden="true"></i> Table {{ table().code }} · {{ table().area }}</span>
+  </section>
+
+  <section class="card" aria-live="polite">
+    @if (step() === 'phone') {
+      <div class="steps" aria-hidden="true"><span class="on"></span><span></span></div>
+      <h2>Sign in to order</h2>
+      <p class="muted">Enter your mobile number. We'll send a 6-digit code to verify it. No app or password needed.</p>
+
+      <form (submit)="sendCode($event)" novalidate>
+        <label class="field">
+          <span class="label">Mobile number</span>
+          <span class="phone" [class.invalid]="showPhoneError()">
+            <span class="cc">+91</span>
+            <input type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="98765 43210" required
+                   [value]="phone()" (input)="setPhone($event)" (blur)="phoneTouched.set(true)"
+                   [attr.aria-invalid]="showPhoneError()" aria-describedby="phone-help" />
+          </span>
+          @if (showPhoneError()) {
+            <small id="phone-help" class="err">Enter a valid 10-digit Indian mobile number.</small>
+          } @else {
+            <small id="phone-help" class="help">Used for your bill and order updates.</small>
+          }
+        </label>
+
+        <label class="field">
+          <span class="label">Your name <em>(optional)</em></span>
+          <input class="text" type="text" autocomplete="given-name" maxlength="40" placeholder="So staff know who ordered"
+                 [value]="name()" (input)="name.set($any($event.target).value)" />
+        </label>
+
+        <label class="check">
+          <input type="checkbox" [checked]="consent()" (change)="consent.set($any($event.target).checked)" required />
+          <span>I agree to the Terms and Privacy Policy, and to {{ cafe().name }} using my number for this order and my bill.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" [checked]="marketing()" (change)="marketing.set($any($event.target).checked)" />
+          <span>Send me offers and loyalty updates (optional).</span>
+        </label>
+
+        @if (error()) { <p class="err-box" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p> }
+        <ros-button type="submit" label="Get OTP" icon="pi-arrow-right" size="large" fluid [loading]="busy()" [disabled]="!normalized() || !consent()" />
+      </form>
+    } @else {
+      <div class="steps" aria-hidden="true"><span class="on"></span><span class="on"></span></div>
+      <button type="button" class="back" (click)="changeNumber()"><i class="pi pi-arrow-left" aria-hidden="true"></i> Change number</button>
+      <h2>Enter verification code</h2>
+      <p class="muted">We sent a 6-digit code to <strong>+91 {{ maskedPhone() }}</strong></p>
+
+      <form (submit)="verify($event)" novalidate>
+        <label class="otp">
+          <span class="sr-only">6-digit code</span>
+          <input #codeInput class="otp-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                 [value]="code()" (input)="setCode($event)" [attr.aria-invalid]="!!error()" />
+          <span class="boxes" aria-hidden="true">
+            @for (i of slots; track i) {
+              <span class="box" [class.filled]="!!code()[i]" [class.active]="code().length === i" [class.bad]="!!error()">{{ code()[i] ?? '' }}</span>
+            }
+          </span>
+        </label>
+
+        @if (devMode && challenge()?.devCode) {
+          <p class="dev"><i class="pi pi-info-circle" aria-hidden="true"></i> Development: no SMS is sent. Your code is <strong>{{ challenge()!.devCode }}</strong></p>
+        }
+        @if (error()) { <p class="err-box" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p> }
+
+        <ros-button type="submit" label="Verify & continue" size="large" fluid [loading]="busy()" [disabled]="code().length !== 6" />
+      </form>
+
+      <p class="resend">
+        @if (resendIn() > 0) {
+          Didn't get it? Resend in <strong>0:{{ resendIn() < 10 ? '0' : '' }}{{ resendIn() }}</strong>
+        } @else {
+          Didn't get it? <button type="button" class="link" [disabled]="busy()" (click)="resend()">Resend code</button>
+        }
+      </p>
+    }
+  </section>
+
+  <p class="foot"><i class="pi pi-lock" aria-hidden="true"></i> Your number is only shared with {{ cafe().name }}.</p>
+</div>

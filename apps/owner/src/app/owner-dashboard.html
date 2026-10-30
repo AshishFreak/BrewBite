@@ -1,0 +1,111 @@
+<div class="owner">
+  <header class="o-head">
+    <div>
+      <h1>Today at {{ cafe().name }}</h1>
+      <span><i class="pi pi-circle-fill live-dot" aria-hidden="true"></i> Live · updated {{ updatedAt() }}</span>
+    </div>
+    <ros-user-menu />
+  </header>
+
+  <section class="hero" aria-label="Net sales today">
+    <span class="hero-label">Net sales</span>
+    <strong class="hero-value">{{ totals().net | inr }}</strong>
+    <span class="hero-sub">{{ totals().bills }} bills · {{ totals().collected | inr }} collected incl. GST</span>
+  </section>
+
+  <section class="kpis" aria-label="Key figures">
+    <div class="kpi"><span>Average bill</span><strong>{{ totals().avgBill | inr }}</strong></div>
+    <div class="kpi"><span>Tables occupied</span><strong>{{ live().occupied }}<small>/{{ live().tables }}</small></strong></div>
+    <div class="kpi"><span>Open checks</span><strong>{{ live().openValue | inr }}</strong></div>
+    <div class="kpi"><span>Avg kitchen time</span><strong>{{ kitchenMinutes() }}<small> min</small></strong></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Net sales by hour</h2>
+      @if (peakHour(); as p) { <span class="muted">Peak {{ p.label }} · {{ p.net | inr }}</span> }
+    </div>
+    @if (hours().length) {
+      <div class="bars" role="img" [attr.aria-label]="'Net sales by hour, peak ' + (peakHour()?.label ?? '')" (mouseleave)="hovered.set(null)">
+        @for (h of hours(); track h.hour) {
+          <button type="button" class="bar-col" (mouseenter)="hovered.set(h)" (focus)="hovered.set(h)" (blur)="hovered.set(null)"
+                  [attr.aria-label]="h.label + ': ' + (h.net | inr) + ', ' + h.bills + ' bills'">
+            <span class="bar" [class.on]="hovered()?.hour === h.hour" [style.height.%]="(h.net / maxHour()) * 100"></span>
+            <span class="tick">{{ h.label }}</span>
+          </button>
+        }
+        @if (hovered(); as h) {
+          <div class="tip" role="status">
+            <strong>{{ h.label }}</strong>
+            <span>{{ h.net | inr }} net</span>
+            <span class="muted">{{ h.bills }} bill{{ h.bills === 1 ? '' : 's' }}</span>
+          </div>
+        }
+      </div>
+      <table class="sr-only">
+        <caption>Net sales by hour</caption>
+        <tr><th scope="col">Hour</th><th scope="col">Net sales</th><th scope="col">Bills</th></tr>
+        @for (h of hours(); track h.hour) { <tr><td>{{ h.label }}</td><td>{{ h.net | inr }}</td><td>{{ h.bills }}</td></tr> }
+      </table>
+    } @else {
+      <p class="muted">No settled bills yet today.</p>
+    }
+  </section>
+
+  <div class="two">
+    <section class="card">
+      <div class="card-head"><h2>Payment mix</h2></div>
+      @for (m of paymentMix(); track m.method) {
+        <div class="hbar" [title]="m.method + ': ' + (m.amount | inr) + ' (' + m.pct + '%)'">
+          <span class="hb-label">
+            <i class="pi" [class.pi-qrcode]="m.method === 'UPI'" [class.pi-credit-card]="m.method === 'Card'" [class.pi-money-bill]="m.method === 'Cash'" aria-hidden="true"></i>
+            {{ m.method }}
+          </span>
+          <span class="hb-track"><span class="hb-fill" [style.width.%]="m.pct"></span></span>
+          <span class="hb-value">{{ m.pct }}% <small>{{ m.amount | inr }}</small></span>
+        </div>
+      }
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Top items</h2><span class="muted">by quantity</span></div>
+      @for (i of topItems(); track i.name; let rank = $index) {
+        <div class="hbar" [title]="i.name + ': ' + i.quantity + ' sold, ' + (i.sales | inr)">
+          <span class="hb-label"><span aria-hidden="true">{{ i.emoji }}</span> {{ i.name }}</span>
+          <span class="hb-track"><span class="hb-fill" [style.width.%]="(i.quantity / maxItemQty()) * 100"></span></span>
+          <span class="hb-value">{{ i.quantity }} <small>{{ i.sales | inr }}</small></span>
+        </div>
+      } @empty {
+        <p class="muted">No items sold yet.</p>
+      }
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><h2>Live tables</h2><span class="muted">{{ live().inKitchen }} tickets in the kitchen</span></div>
+    <div class="live">
+      @for (r of live().rows; track r.code) {
+        <div class="live-row">
+          <strong>{{ r.code }}</strong>
+          <span class="muted">{{ r.guests }} guests · {{ since(r.since) }}</span>
+          @if (r.status !== 'Open') { <span class="pill">{{ r.status === 'BillRequested' ? 'Bill requested' : 'Paying' }}</span> }
+          <span class="lv">{{ r.value | inr }}</span>
+        </div>
+      } @empty {
+        <p class="muted">No tables open right now.</p>
+      }
+    </div>
+  </section>
+
+  <section class="card defs">
+    <h2>How these numbers are calculated</h2>
+    <div class="def-grid">
+      <span>Gross sales (menu prices)</span><span>{{ totals().gross | inr:2 }}</span>
+      <span>− Discounts</span><span>{{ totals().discounts | inr:2 }}</span>
+      <span><strong>= Net sales (before GST)</strong></span><span><strong>{{ totals().net | inr:2 }}</strong></span>
+      <span>+ GST collected (CGST + SGST)</span><span>{{ totals().tax | inr:2 }}</span>
+      <span>= Collected (incl. round-off)</span><span>{{ totals().collected | inr:2 }}</span>
+    </div>
+    <p class="muted small">Settled bills only, using the café's local business day. Sales are not profit: costs, wastage and payroll are not included.</p>
+  </section>
+</div>

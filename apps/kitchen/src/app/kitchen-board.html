@@ -1,0 +1,87 @@
+<div class="kds">
+  <header class="kds-bar">
+    <div class="title">
+      <i class="pi pi-desktop" aria-hidden="true"></i>
+      <div>
+        <h1>Kitchen display</h1>
+        <span>{{ cafe().name }} · {{ cafe().branch }}</span>
+      </div>
+    </div>
+
+    <div class="seg" role="radiogroup" aria-label="Station">
+      @for (s of stations; track s) {
+        <button type="button" role="radio" [attr.aria-checked]="station() === s" [class.on]="station() === s" (click)="station.set(s)">{{ s }}</button>
+      }
+    </div>
+
+    <div class="stats" aria-live="polite">
+      <span><strong>{{ byLane().Queued.length }}</strong> new</span>
+      <span><strong>{{ byLane().InProgress.length }}</strong> preparing</span>
+      <span><strong>{{ avgPrepMinutes() }}m</strong> avg ticket time</span>
+    </div>
+
+    <div class="right">
+      <button type="button" class="sound" [class.on]="soundOn()" [attr.aria-pressed]="soundOn()" (click)="toggleSound()">
+        <i class="pi" [class.pi-volume-up]="soundOn()" [class.pi-volume-off]="!soundOn()" aria-hidden="true"></i>
+        {{ soundOn() ? 'Sound on' : 'Sound off' }}
+      </button>
+      <span class="clock">{{ clockLabel() }}</span>
+      <ros-user-menu [dark]="true" />
+    </div>
+  </header>
+
+  <main class="lanes">
+    @for (lane of lanes; track lane.status) {
+      <section class="lane" [attr.aria-label]="lane.title">
+        <h2><i class="pi" [class]="lane.icon" aria-hidden="true"></i> {{ lane.title }} <span>{{ byLane()[lane.status].length }}</span></h2>
+        <div class="tickets">
+          @for (v of byLane()[lane.status]; track v.ticket.id) {
+            @let t = v.ticket;
+            @let age = ageLevel(t);
+            <article class="ticket" [class]="'age-' + age" [class.fresh]="isFresh(t)" [class.ready]="t.status === 'Ready'">
+              <header>
+                <span class="num">#{{ t.orderNumber }}</span>
+                <span class="tbl">{{ t.tableCode }}</span>
+                <span class="tag">{{ t.station }}</span>
+                <span class="tag src">{{ t.source === 'QR' ? 'QR order' : 'POS' }}</span>
+              </header>
+              <div class="timer">
+                <i class="pi pi-clock" aria-hidden="true"></i>
+                <span>{{ t.status === 'Ready' ? 'Waiting ' : '' }}{{ elapsedFor(t) }}</span>
+                @if (age === 'late') { <strong class="late-flag"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i> LATE</strong> }
+                @if (isFresh(t)) { <strong class="new-flag">NEW</strong> }
+              </div>
+              <ul>
+                @for (i of v.items; track i.id) {
+                  <li>
+                    <span class="q">{{ i.quantity }}×</span>
+                    <span class="n">
+                      {{ i.name }}
+                      @if (describeItem(i); as d) { <small>{{ d }}</small> }
+                      @if (i.notes) { <em class="note"><i class="pi pi-comment" aria-hidden="true"></i> {{ i.notes }}</em> }
+                    </span>
+                  </li>
+                }
+              </ul>
+              <footer>
+                @switch (t.status) {
+                  @case ('Queued') {
+                    <ros-button label="Start" icon="pi pi-play" [loading]="pending() === t.id" (pressed)="move(t, 'InProgress')" fluid size="large" />
+                  }
+                  @case ('InProgress') {
+                    <ros-button label="Mark ready" icon="pi pi-check" severity="success" [loading]="pending() === t.id" (pressed)="move(t, 'Ready')" fluid size="large" />
+                  }
+                  @case ('Ready') {
+                    <ros-button label="Recall" icon="pi pi-undo" severity="secondary" [outlined]="true" [loading]="pending() === t.id" (pressed)="move(t, 'InProgress')" fluid />
+                  }
+                }
+              </footer>
+            </article>
+          } @empty {
+            <p class="empty">{{ lane.status === 'Queued' ? 'No new tickets' : lane.status === 'InProgress' ? 'Nothing cooking' : 'Nothing waiting' }}</p>
+          }
+        </div>
+      </section>
+    }
+  </main>
+</div>

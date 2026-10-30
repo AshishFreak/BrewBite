@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Admin</title>
+    <meta name="theme-color" content="#ea580c" />
+    <base href="/" />
+    <script>
+      // GitHub Pages deep links: 404.html forwards e.g. /guest/t/T2 here as ?__path=…; restore it before Angular starts.
+      (function () { var p = new URLSearchParams(location.search).get('__path'); if (p && p.charAt(0) === '/' && p.charAt(1) !== '/') history.replaceState(null, '', p); })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
+</html>

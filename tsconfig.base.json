@@ -1,0 +1,23 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2022",
+    "module": "esnext",
+    "lib": ["es2022", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "paths": {
+      "@ros/shared/domain": ["./libs/shared/domain/src/index.ts"],
+      "@ros/shared/data-access": ["./libs/shared/data-access/src/index.ts"],
+      "@ros/shared/ui": ["./libs/shared/ui/src/index.ts"],
+      "@ros/shared/auth": ["./libs/shared/auth/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

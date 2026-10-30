@@ -1,0 +1,57 @@
+@use './pos-shared';
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 1rem; padding: 1rem; }
+@media (max-width: 960px) { .layout { grid-template-columns: 1fr; } .alerts { order: -1; } }
+
+.legend {
+  list-style: none; margin: 0 0 .6rem; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .82rem;
+  li { display: flex; gap: .35rem; align-items: center; padding: .2rem .55rem; border-radius: 99px; border: 1px solid var(--line); background: var(--card); }
+}
+
+.area h2 { font-size: .85rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 1rem 0 .6rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); gap: .8rem; }
+
+.tile {
+  display: flex; flex-direction: column; gap: .35rem; text-align: left; min-height: 128px; padding: .8rem;
+  border-radius: 14px; border: 1.5px solid var(--line); border-top-width: 6px; background: var(--card); color: var(--text);
+  font: inherit; cursor: pointer; transition: transform .1s;
+  &:active { transform: scale(.98); }
+}
+.tile-top { display: flex; justify-content: space-between; align-items: center; }
+.code { font-size: 1.35rem; font-weight: 800; }
+.cap { font-size: .8rem; color: var(--muted); }
+.status { font-size: .82rem; font-weight: 600; display: flex; gap: .35rem; align-items: center; }
+.tile-foot { display: flex; justify-content: space-between; font-weight: 700; margin-top: auto; font-size: .92rem; }
+.flags { display: flex; flex-wrap: wrap; gap: .3rem; }
+.flag { font-size: .7rem; font-weight: 700; padding: .12rem .4rem; border-radius: 6px; display: inline-flex; gap: .25rem; align-items: center;
+  &.ready { background: #dcfce7; color: #166534; }
+  &.cooking { background: #fef3c7; color: #92400e; }
+  &.waiter { background: #fee2e2; color: #991b1b; } }
+
+/* Status colours always pair with an icon + label, never colour alone. */
+.st-Available { border-top-color: #22c55e; .status, & i { color: #15803d; } }
+.st-Occupied { border-top-color: #3b82f6; .status { color: #1d4ed8; } }
+.st-Reserved { border-top-color: #a855f7; .status { color: #7e22ce; } }
+.st-Cleaning { border-top-color: #94a3b8; background: repeating-linear-gradient(135deg, var(--card) 0 10px, var(--bg) 10px 20px); .status { color: #475569; } }
+.st-BillRequested { border-top-color: #f97316; .status { color: #c2410c; } }
+.st-Paying { border-top-color: #eab308; .status { color: #a16207; } }
+.legend li.st-Available i { color: #15803d; } .legend li.st-Occupied i { color: #1d4ed8; } .legend li.st-Reserved i { color: #7e22ce; }
+.legend li.st-Cleaning { background: var(--card); } .legend li.st-BillRequested i { color: #c2410c; } .legend li.st-Paying i { color: #a16207; }
+
+.alerts {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 1rem; align-self: start;
+  display: flex; flex-direction: column; gap: .6rem; position: sticky; top: 76px;
+  h2 { margin: 0 0 .2rem; font-size: 1rem; display: flex; gap: .5rem; align-items: center;
+    span { margin-left: auto; background: var(--brand); color: #fff; border-radius: 99px; padding: 0 .55rem; font-size: .8rem; } }
+}
+.alert {
+  display: flex; gap: .5rem; align-items: center; padding: .25rem .5rem .25rem 0; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--bg); border-left: 4px solid;
+  &.a-waiter { border-left-color: #ef4444; i { color: #dc2626; } }
+  &.a-bill { border-left-color: #f97316; i { color: #ea580c; } }
+  &.a-ready { border-left-color: #22c55e; i { color: #16a34a; } }
+}
+.a-main { flex: 1; display: flex; gap: .7rem; align-items: center; text-align: left; padding: .5rem .7rem; border: 0; background: none; color: var(--text); font: inherit; cursor: pointer; }
+.a-body { flex: 1; display: flex; flex-direction: column; font-size: .9rem; small { color: var(--muted); } }
+.a-done { font: inherit; font-size: .78rem; font-weight: 700; padding: .35rem .65rem; border-radius: 8px; background: var(--card); color: var(--text); border: 1px solid var(--line); cursor: pointer; }
+.muted { color: var(--muted); font-weight: 400; }

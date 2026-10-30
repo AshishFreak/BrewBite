@@ -1,0 +1,76 @@
+<div class="pos">
+  <header class="pos-bar">
+    <div class="title">
+      <h1>Floor</h1>
+      <span>{{ cafe().name }} · {{ cafe().branch }}</span>
+    </div>
+    <div class="kpis">
+      <span><strong>{{ occupied() }}</strong>/{{ tiles().length }} tables occupied</span>
+      <span><strong>{{ openValue() | inr }}</strong> open checks</span>
+      <ros-user-menu />
+    </div>
+  </header>
+
+  <div class="layout">
+    <main class="floor">
+      <ul class="legend" aria-label="Table status legend">
+        @for (l of legend; track l[0]) {
+          <li class="st-{{ l[0] }}"><i class="pi {{ l[1].icon }}" aria-hidden="true"></i> {{ l[1].label }}</li>
+        }
+      </ul>
+
+      @for (area of areas(); track area.name) {
+        <section class="area">
+          <h2>{{ area.name }}</h2>
+          <div class="grid">
+            @for (t of area.tiles; track t.table.id) {
+              <button type="button" class="tile st-{{ t.state }}" (click)="openTile(t.table, t.state)"
+                      [attr.aria-label]="'Table ' + t.table.code + ', ' + meta[t.state].label">
+                <span class="tile-top">
+                  <span class="code">{{ t.table.code }}</span>
+                  <span class="cap"><i class="pi pi-user" aria-hidden="true"></i> {{ t.session?.guestCount || t.table.capacity }}</span>
+                </span>
+                <span class="status"><i class="pi {{ meta[t.state].icon }}" aria-hidden="true"></i> {{ meta[t.state].label }}</span>
+                @if (t.session) {
+                  <span class="tile-foot">
+                    <span>{{ t.total | inr }}</span>
+                    <span class="muted">{{ since(t.session.openedAt) }}</span>
+                  </span>
+                  <span class="flags">
+                    @if (t.ready) { <span class="flag ready"><i class="pi pi-bell" aria-hidden="true"></i> {{ t.ready }} ready</span> }
+                    @if (t.cooking) { <span class="flag cooking"><i class="pi pi-hourglass" aria-hidden="true"></i> {{ t.cooking }} cooking</span> }
+                    @if (t.session.waiterCalledAt) { <span class="flag waiter"><i class="pi pi-megaphone" aria-hidden="true"></i> Calling</span> }
+                  </span>
+                } @else if (t.state === 'Cleaning') {
+                  <span class="tile-foot muted">Tap when cleaned</span>
+                } @else {
+                  <span class="tile-foot muted">Seats {{ t.table.capacity }}</span>
+                }
+              </button>
+            }
+          </div>
+        </section>
+      }
+    </main>
+
+    <aside class="alerts" aria-label="Live alerts">
+      <h2><i class="pi pi-bell" aria-hidden="true"></i> Live alerts <span>{{ alerts().length }}</span></h2>
+      @for (a of alerts(); track a.kind + a.sessionId + a.text) {
+        <div class="alert a-{{ a.kind }}">
+          <button type="button" class="a-main" (click)="goTo(a.tableId)">
+            <i class="pi" [class.pi-megaphone]="a.kind === 'waiter'" [class.pi-receipt]="a.kind === 'bill'" [class.pi-bell]="a.kind === 'ready'" aria-hidden="true"></i>
+            <span class="a-body">
+              <span><strong>{{ a.tableCode }}</strong> · {{ a.text }}</span>
+              <small>{{ since(a.at) }} ago</small>
+            </span>
+          </button>
+          @if (a.kind === 'waiter') {
+            <button type="button" class="a-done" (click)="dismiss(a)">Done</button>
+          }
+        </div>
+      } @empty {
+        <p class="muted">All calm. New guest requests and ready orders show up here instantly.</p>
+      }
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,297 @@
+<div class="guest">
+  @if (!table()) {
+    <div class="state">
+      <div class="state-icon" aria-hidden="true">🔍</div>
+      <h1>We couldn't find this table</h1>
+      <p>The QR code may be old or damaged. Please ask a staff member for help.</p>
+    </div>
+  } @else if (!customer()) {
+    <app-guest-landing [table]="table()!" />
+  } @else {
+    <header class="top">
+      <div class="hello">
+        <span class="hi">{{ cafe().name }} · Table {{ table()!.code }}</span>
+        <h1>@if (firstName()) { Hi {{ firstName() }}, hungry? } @else { Hungry now? } <span aria-hidden="true">🔥</span></h1>
+      </div>
+      @if (session() && session()!.status !== 'Closed') {
+        <button type="button" class="call-btn" [class.active]="!!session()!.waiterCalledAt" (click)="callOpen.set(true)">
+          <i class="pi pi-bell" aria-hidden="true"></i>
+          <span>{{ session()!.waiterCalledAt ? 'Staff coming' : 'Call staff' }}</span>
+          @if (session()!.waiterCalledAt) { <span class="pulse" aria-hidden="true"></span> }
+        </button>
+      }
+    </header>
+
+    @if (session()?.status === 'Closed') {
+      <div class="state">
+        <div class="state-icon ok" aria-hidden="true"><i class="pi pi-check"></i></div>
+        <h1>Thank you for visiting!</h1>
+        @if (invoice(); as inv) { <p>Bill {{ inv.invoiceNo }} · {{ inv.total | inr }} paid</p> }
+        <p>We hope to see you again soon at {{ cafe().name }}.</p>
+        <ros-button label="Start a new order" icon="pi-refresh" (pressed)="startNewVisit()" />
+      </div>
+    } @else {
+      <div class="seg" role="tablist" aria-label="Guest sections">
+        <button role="tab" type="button" [class.on]="tab() === 'menu'" [attr.aria-selected]="tab() === 'menu'" (click)="tab.set('menu')">Menu</button>
+        <button role="tab" type="button" [class.on]="tab() === 'orders'" [attr.aria-selected]="tab() === 'orders'" (click)="tab.set('orders')">
+          Your table @if (orders().length) { <span class="count">{{ orders().length }}</span> }
+        </button>
+      </div>
+
+      @if (tab() === 'menu') {
+        <div class="search-row">
+          <label class="search">
+            <i class="pi pi-search" aria-hidden="true"></i>
+            <input type="search" placeholder="Search dishes…" aria-label="Search the menu" [value]="query()" (input)="query.set($any($event.target).value)" />
+          </label>
+          <button type="button" class="veg" [class.on]="vegOnly()" [attr.aria-pressed]="vegOnly()" (click)="vegOnly.set(!vegOnly())">
+            <ros-food-mark type="veg" /> <span>Veg</span>
+          </button>
+        </div>
+
+        <div class="cats" aria-label="Menu categories">
+          <button type="button" class="cat" [class.on]="category() === 'all'" [attr.aria-pressed]="category() === 'all'" (click)="category.set('all')">
+            <span class="cat-icon" aria-hidden="true">🍽️</span><span class="cat-name">All</span>
+          </button>
+          @for (c of categories(); track c.id) {
+            <button type="button" class="cat" [class.on]="category() === c.id" [attr.aria-pressed]="category() === c.id" (click)="category.set(c.id)">
+              <span class="cat-icon" aria-hidden="true">{{ c.icon }}</span><span class="cat-name">{{ c.name }}</span>
+            </button>
+          }
+        </div>
+
+        @if (popular().length) {
+          <section class="sec" aria-label="Popular items">
+            <div class="sec-head"><h2>Popular items</h2></div>
+            <div class="pop-row">
+              @for (p of popular(); track p.id) {
+                <article class="pop-card">
+                  <button type="button" class="pop-main" (click)="openProduct(p)">
+                    <span class="pop-name">{{ p.name }}</span>
+                    <span class="pop-price">@if (p.variants.length > 1) { <small>from</small> } {{ p.variants[0].price | inr }}</span>
+                    <span class="pop-img" aria-hidden="true">{{ p.emoji }}</span>
+                    <span class="pop-meta"><ros-food-mark [type]="p.foodType" /><span><i class="pi pi-clock" aria-hidden="true"></i> {{ p.prepMinutes }} min</span></span>
+                  </button>
+                  <button type="button" class="pop-add" [attr.aria-label]="'Add ' + p.name" (click)="quickAdd(p)"><i class="pi pi-shopping-bag" aria-hidden="true"></i></button>
+                </article>
+              }
+            </div>
+          </section>
+        }
+
+        @for (s of sections(); track s.category.id) {
+          <section class="sec">
+            <div class="sec-head"><h2>{{ s.category.name }}</h2><span class="sec-count">{{ s.products.length }} items</span></div>
+            <div class="dishes">
+              @for (p of s.products; track p.id) {
+                @let out = soldOut().has(p.id);
+                <article class="dish" [class.out]="out">
+                  <button type="button" class="dish-main" [disabled]="out" (click)="openProduct(p)">
+                    <span class="dish-img" aria-hidden="true">{{ p.emoji }}</span>
+                    <span class="dish-body">
+                      <span class="dish-name"><ros-food-mark [type]="p.foodType" /> {{ p.name }}</span>
+                      <span class="dish-desc">{{ p.description }}</span>
+                      <span class="dish-foot">
+                        <strong class="price">@if (p.variants.length > 1) { <small>from</small> } {{ p.variants[0].price | inr }}</strong>
+                        <span class="time"><i class="pi pi-clock" aria-hidden="true"></i> {{ p.prepMinutes }} min</span>
+                        @if (p.popular) { <span class="tag-pop"><i class="pi pi-star-fill" aria-hidden="true"></i> Popular</span> }
+                      </span>
+                    </span>
+                  </button>
+                  @if (out) {
+                    <span class="sold">Sold out</span>
+                  } @else {
+                    <button type="button" class="dish-add" [attr.aria-label]="'Add ' + p.name" (click)="quickAdd(p)"><i class="pi pi-plus" aria-hidden="true"></i></button>
+                  }
+                </article>
+              }
+            </div>
+          </section>
+        } @empty {
+          <div class="state small"><p>No dishes match your search.</p></div>
+        }
+        <p class="fine-print">Prices exclude 5% GST, which is added on the final bill.</p>
+      } @else {
+        <section class="orders">
+          @for (o of orders(); track o.id) {
+            <article class="card order-card">
+              <header>
+                <div><strong>Order #{{ o.number }}</strong><span class="muted"> · {{ timeOfDay(o.createdAt) }}</span></div>
+                <span class="by" [class.me]="o.guestLabel === guest()?.label">
+                  {{ o.source === 'POS' ? 'Staff' : o.guestLabel === guest()?.label ? 'You' : o.guestLabel }}
+                </span>
+              </header>
+              @if (orderInvoice(o.id); as paid) {
+                <p class="pay-state paid"><i class="pi pi-check-circle" aria-hidden="true"></i> Paid {{ paid.total | inr }} by {{ paid.payments[0].method }} · {{ paid.invoiceNo }}</p>
+              } @else {
+                <p class="pay-state later"><i class="pi pi-clock" aria-hidden="true"></i> Added by staff · pay on the table bill</p>
+              }
+              <ol class="stepper" [attr.aria-label]="'Order status: ' + stepLabels[o.status]">
+                @for (step of steps; track step; let i = $index) {
+                  <li [class.done]="i <= stepIndex(o)" [class.current]="i === stepIndex(o)">
+                    <span class="dot">@if (i < stepIndex(o)) { <i class="pi pi-check" aria-hidden="true"></i> }</span>
+                    <span class="lbl">{{ stepLabels[step] }}</span>
+                  </li>
+                }
+              </ol>
+              @if (readyEstimate(o); as eta) { <p class="eta"><i class="pi pi-clock" aria-hidden="true"></i> {{ eta }}</p> }
+              @if (o.status === 'Ready') { <p class="eta ready"><i class="pi pi-bell" aria-hidden="true"></i> Your food is ready and on its way</p> }
+              <ul class="order-items">
+                @for (i of o.items; track i.id) {
+                  <li>
+                    <span class="oi-img" aria-hidden="true">{{ i.emoji }}</span>
+                    <span class="n">{{ i.quantity }}× {{ i.name }}
+                      @if (describeItem(i); as d) { <small>{{ d }}</small> }
+                      @if (i.notes) { <small class="note">“{{ i.notes }}”</small> }
+                    </span>
+                    <span class="a">{{ i.lineTotal | inr }}</span>
+                  </li>
+                }
+              </ul>
+            </article>
+          } @empty {
+            <div class="state small">
+              <div class="state-icon" aria-hidden="true">🍽️</div>
+              <p>Nothing ordered yet. Everyone at the table can order from their own phone.</p>
+              <ros-button label="Browse the menu" (pressed)="tab.set('menu')" />
+            </div>
+          }
+
+          @if (orders().length) {
+            @if (invoice(); as inv) {
+              <article class="card bill">
+                <h2>Your bill <small>{{ inv.invoiceNo }}</small></h2>
+                @for (l of inv.lines; track $index) {
+                  <div class="row"><span>{{ l.quantity }} × {{ l.description }}</span><span>{{ l.amount | inr:2 }}</span></div>
+                }
+                <div class="row sep"><span>Subtotal</span><span>{{ inv.subTotal | inr:2 }}</span></div>
+                @if (inv.discount) { <div class="row"><span>Discount ({{ inv.discountPct }}%)</span><span>−{{ inv.discount | inr:2 }}</span></div> }
+                <div class="row"><span>CGST 2.5%</span><span>{{ inv.cgst | inr:2 }}</span></div>
+                <div class="row"><span>SGST 2.5%</span><span>{{ inv.sgst | inr:2 }}</span></div>
+                @if (inv.roundOff) { <div class="row"><span>Round off</span><span>{{ inv.roundOff | inr:2 }}</span></div> }
+                <div class="row total"><span>Total</span><span>{{ inv.total | inr }}</span></div>
+                @if (balance() > 0) {
+                  @if (upiStep() === 'waiting') {
+                    <div class="upi-wait" role="status"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Waiting for UPI confirmation…</div>
+                  } @else {
+                    <ros-button [label]="'Pay ' + (balance() | inr) + ' with UPI'" icon="pi-mobile" size="large" (pressed)="payWithUpi()" fluid />
+                    <p class="muted center">Or pay by cash or card at the counter.</p>
+                  }
+                }
+              </article>
+            } @else {
+              <div class="card table-total">
+                <div class="tt-row"><span>Paid so far</span><strong>{{ paidSoFar() | inr }}</strong></div>
+                @if (payLaterOrders().length) {
+                  <div class="tt-row due"><span>Due on the table bill</span><strong>{{ payLaterTotal() | inr }} + GST</strong></div>
+                } @else {
+                  <small>All your orders are paid. Order more any time.</small>
+                }
+              </div>
+            }
+            @if (payLaterOrders().length && !invoice()) {
+              <ros-button [label]="session()?.status === 'BillRequested' ? 'Bill requested' : 'Request the table bill'" icon="pi-receipt"
+                          fluid [disabled]="session()?.status === 'BillRequested' || busy()" (pressed)="requestBill()" />
+            }
+          }
+          <p class="signed-in">
+            <i class="pi pi-user" aria-hidden="true"></i> Signed in as +91 {{ maskedPhone() }} ·
+            <button type="button" class="link" (click)="signOut()">Not you? Sign out</button>
+          </p>
+        </section>
+      }
+
+      @if (cart().count() && tab() === 'menu') {
+        <button type="button" class="cart-bar" (click)="cartOpen.set(true)">
+          <span class="cb-text"><strong>Cart</strong><small>{{ cart().count() }} item{{ cart().count() > 1 ? 's' : '' }} · {{ cart().subTotal() | inr }}</small></span>
+          <span class="cb-thumbs" aria-hidden="true">@for (e of cartEmojis(); track $index) { <span>{{ e }}</span> }</span>
+          <i class="pi pi-arrow-right" aria-hidden="true"></i>
+        </button>
+      }
+    }
+
+    <ros-sheet [visible]="!!optionsProduct()" (visibleChange)="onOptionsVisible($event)" variant="sheet" label="Item details">
+      @if (optionsProduct(); as p) {
+        <ros-product-options [product]="p" [modifierGroups]="catalog().modifierGroups" submitLabel="Add to cart" (added)="addToCart($event)" />
+      }
+    </ros-sheet>
+
+    <ros-sheet [(visible)]="callOpen" variant="sheet" header="Call staff">
+      @if (session()?.waiterCalledAt) {
+        <div class="called" role="status">
+          <span class="called-icon" aria-hidden="true"><i class="pi pi-bell"></i></span>
+          <div>
+            <strong>Staff have been notified</strong>
+            <small>{{ session()?.waiterReason ?? 'Assistance' }} · {{ calledAgo() }} ago</small>
+          </div>
+        </div>
+        <ros-button label="Cancel request" severity="secondary" fluid [loading]="busy()" (pressed)="cancelCall()" />
+      } @else {
+        <p class="muted call-intro">What do you need? A team member will come to table {{ table()!.code }}.</p>
+        <div class="reasons">
+          @for (r of callReasons; track r.label) {
+            <button type="button" class="reason" [disabled]="busy()" (click)="callStaff(r.label)">
+              <i class="pi {{ r.icon }}" aria-hidden="true"></i><span>{{ r.label }}</span>
+            </button>
+          }
+        </div>
+      }
+    </ros-sheet>
+
+    <ros-sheet [(visible)]="cartOpen" variant="sheet" header="Cart">
+      <div class="cart">
+        @for (l of cart().lines(); track l.key) {
+          @let d = describeLine(l);
+          <div class="cart-line">
+            <span class="cl-img" aria-hidden="true">{{ d.emoji }}</span>
+            <span class="cl-body">
+              <strong>{{ d.name }}</strong>
+              @if (d.detail) { <small>{{ d.detail }}</small> }
+              @if (l.notes) { <small class="note">“{{ l.notes }}”</small> }
+              <span class="cl-price">{{ cart().lineTotal(l) | inr }}</span>
+              <span class="mini-stepper" role="group" [attr.aria-label]="'Quantity of ' + d.name">
+                <button type="button" [attr.aria-label]="'Remove one ' + d.name" (click)="cart().setQuantity(l.key, l.quantity - 1)"><i class="pi pi-minus"></i></button>
+                <span>{{ l.quantity }}</span>
+                <button type="button" [attr.aria-label]="'Add one ' + d.name" (click)="cart().setQuantity(l.key, l.quantity + 1)"><i class="pi pi-plus"></i></button>
+              </span>
+            </span>
+            <button type="button" class="cl-remove" [attr.aria-label]="'Remove ' + d.name" (click)="cart().setQuantity(l.key, 0)"><i class="pi pi-times"></i></button>
+          </div>
+        } @empty {
+          <p class="muted center">Your cart is empty.</p>
+        }
+        @if (cart().count()) {
+          @if (cartBill(); as bill) {
+            <div class="summary">
+              <div class="row"><span>Item total</span><span>{{ bill.subTotal | inr:2 }}</span></div>
+              <div class="row"><span>CGST 2.5%</span><span>{{ bill.cgst | inr:2 }}</span></div>
+              <div class="row"><span>SGST 2.5%</span><span>{{ bill.sgst | inr:2 }}</span></div>
+              @if (bill.roundOff) { <div class="row"><span>Round off</span><span>{{ bill.roundOff | inr:2 }}</span></div> }
+              <div class="row total"><span>To pay</span><span>{{ bill.total | inr }}</span></div>
+            </div>
+
+            <fieldset class="pay">
+              <legend>Payment method</legend>
+              <div class="pay-methods" role="radiogroup" aria-label="Payment method">
+                @for (m of payMethods; track m.id) {
+                  <button type="button" class="pm" role="radio" [class.on]="payMethod() === m.id" [attr.aria-checked]="payMethod() === m.id"
+                          [disabled]="submitting()" (click)="payMethod.set(m.id)">
+                    <span class="pm-icon" aria-hidden="true"><i class="pi {{ m.icon }}"></i></span>
+                    <span class="pm-text"><strong>{{ m.label }}</strong><small>{{ m.hint }}</small></span>
+                    <span class="pm-radio" aria-hidden="true"></span>
+                  </button>
+                }
+              </div>
+            </fieldset>
+
+            <ros-button [label]="submitting() ? 'Waiting for ' + payMethod() + ' approval…' : 'Pay ' + (bill.total | inr) + ' & place order'"
+                        icon="pi-lock" size="large" [loading]="submitting()" (pressed)="payAndPlaceOrder()" fluid />
+            <p class="secure"><i class="pi pi-shield" aria-hidden="true"></i> Secure payment. Your order goes to the kitchen as soon as it's paid.</p>
+          } @else {
+            <p class="muted center">An item in your cart is no longer available. Please remove it.</p>
+          }
+        }
+      </div>
+    </ros-sheet>
+  }
+</div>

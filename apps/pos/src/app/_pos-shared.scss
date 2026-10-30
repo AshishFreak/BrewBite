@@ -1,0 +1,12 @@
+:host { display: block; min-height: 100dvh; background: var(--bg); }
+
+.pos-bar {
+  position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  padding: .7rem 1rem; background: var(--card); border-bottom: 1px solid var(--line);
+  .home, .back {
+    width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: var(--text);
+    border: 1px solid var(--line); text-decoration: none; background: var(--bg);
+  }
+  .title { h1 { margin: 0; font-size: 1.15rem; } span { font-size: .8rem; color: var(--muted); } }
+  .kpis { margin-left: auto; display: flex; gap: 1.2rem; font-size: .9rem; color: var(--muted); strong { color: var(--text); } }
+}

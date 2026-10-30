@@ -1,0 +1,72 @@
+<div class="po" [class.with-hero]="hero()">
+  @if (hero()) {
+    <div class="hero"><span class="hero-img" aria-hidden="true">{{ product().emoji }}</span></div>
+    <div class="title-block">
+      <h3>{{ product().name }}</h3>
+      <p class="meta">
+        <span><ros-food-mark [type]="product().foodType" /> {{ foodLabel() }}</span>
+        <span class="dot" aria-hidden="true">•</span>
+        <span><i class="pi pi-clock" aria-hidden="true"></i> {{ product().prepMinutes }} min</span>
+      </p>
+      <p class="desc">{{ product().description }}</p>
+    </div>
+  } @else {
+    <div class="compact-head">
+      <span class="compact-img" aria-hidden="true">{{ product().emoji }}</span>
+      <div>
+        <h3><ros-food-mark [type]="product().foodType" /> {{ product().name }}</h3>
+        <p class="desc">{{ product().description }}</p>
+      </div>
+    </div>
+  }
+
+  @if (product().variants.length > 1) {
+    <fieldset class="group">
+      <legend>Choose size <span class="rule">Required</span></legend>
+      <div class="sizes" [style.--cols]="product().variants.length">
+        @for (v of product().variants; track v.id) {
+          <button type="button" class="size" [class.on]="variantId() === v.id" role="radio" [attr.aria-checked]="variantId() === v.id"
+                  (click)="variantId.set(v.id)">
+            <span class="radio" aria-hidden="true"></span>
+            <span class="size-name">{{ v.name }}</span>
+            <strong>{{ v.price | inr }}</strong>
+          </button>
+        }
+      </div>
+    </fieldset>
+  }
+
+  @for (g of groups(); track g.id) {
+    <fieldset class="group">
+      <legend>{{ g.name }} <span class="rule">{{ ruleText(g) }}</span></legend>
+      <div class="opts">
+        @for (m of g.modifiers; track m.id) {
+          <button type="button" class="opt" [class.on]="isOn(m.id)" [attr.aria-pressed]="isOn(m.id)" (click)="toggle(g, m.id)">
+            <span class="box" [class.round]="g.max === 1" aria-hidden="true"><i class="pi pi-check"></i></span>
+            <span class="opt-name">{{ m.name }}</span>
+            <span class="opt-price">{{ m.price ? '+' + (m.price | inr) : '' }}</span>
+          </button>
+        }
+      </div>
+    </fieldset>
+  }
+
+  @if (showNotes()) {
+    <label class="notes">
+      <span>Notes for the kitchen</span>
+      <textarea rows="2" maxlength="200" placeholder="e.g. less spicy, no onions" [value]="notes()" (input)="setNotes($event)"></textarea>
+    </label>
+  }
+
+  <div class="foot">
+    <div class="total-row">
+      <span class="total">Total: <strong>{{ total() | inr }}</strong></span>
+      <div class="qty" role="group" aria-label="Quantity">
+        <button type="button" aria-label="Decrease quantity" [disabled]="quantity() <= 1" (click)="quantity.set(quantity() - 1)"><i class="pi pi-minus"></i></button>
+        <span aria-live="polite">{{ quantity() }}</span>
+        <button type="button" aria-label="Increase quantity" [disabled]="quantity() >= 20" (click)="quantity.set(quantity() + 1)"><i class="pi pi-plus"></i></button>
+      </div>
+    </div>
+    <ros-button [label]="submitLabel()" size="large" [disabled]="!valid()" (pressed)="add()" fluid />
+  </div>
+</div>

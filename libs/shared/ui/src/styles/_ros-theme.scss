@@ -1,0 +1,75 @@
+// Shared theme for every RestaurantOS app: Material 3 theme + our design tokens.
+// Apps include it with `@use 'ros-theme';` (see stylePreprocessorOptions in each project.json).
+@use '@angular/material' as mat;
+@import 'primeicons/primeicons.css';
+
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: (primary: mat.$orange-palette, tertiary: mat.$azure-palette, theme-type: light),
+    typography: (plain-family: ('Outfit', system-ui, sans-serif), brand-family: ('Outfit', system-ui, sans-serif)),
+    density: 0,
+  ));
+}
+
+:root {
+  // Brand: change these four values to re-colour every app.
+  --brand: #ea580c;
+  --brand-strong: #c2410c;
+  --brand-soft: #fff1e6;
+  --brand-shadow: rgb(234 88 12 / .28);
+
+  --font: 'Outfit', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --bg: #f3f4f7;
+  --surface: #fbfbfc;
+  --card: #ffffff;
+  --text: #1d2026;
+  --muted: #7c818b;
+  --line: #e6e8ec;
+  --line-soft: #f0f1f4;
+  --chip: #f2f3f6;
+  --shadow: 0 12px 32px rgb(23 28 40 / .08);
+  --shadow-sm: 0 4px 16px rgb(23 28 40 / .05);
+  --chart-1: #ea580c;
+  --chart-1-strong: #9a3412;
+  // Keep Material's filled buttons on the exact brand orange used across the custom screens.
+  --mat-button-filled-container-color: var(--brand);
+  --mat-button-filled-label-text-color: #fff;
+  // Plain card surfaces for overlays instead of Material's tinted containers.
+  --mat-bottom-sheet-container-background-color: var(--card);
+  --mat-dialog-container-color: var(--card);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+// Overlays rendered by ros-sheet and Notifier.
+.ros-dialog .mat-mdc-dialog-surface { border-radius: 18px; background: var(--card); }
+.ros-bottom-sheet .mat-bottom-sheet-container {
+  padding: 0; border-radius: 20px 20px 0 0; max-height: 92dvh; width: min(520px, 100vw); min-width: 0; max-width: 100vw;
+  background: var(--card);
+}
+.ros-snack { --mat-snack-bar-container-color: #1c1917; --mat-snack-bar-supporting-text-color: #fafaf9; --mat-snack-bar-button-color: #fdba74; }
+.ros-snack .mat-mdc-snackbar-surface { border-left: 4px solid #38bdf8; }
+.ros-snack-success .mat-mdc-snackbar-surface { border-left-color: #22c55e; }
+.ros-snack-warn .mat-mdc-snackbar-surface { border-left-color: #f59e0b; }
+.ros-snack-error .mat-mdc-snackbar-surface { border-left-color: #ef4444; }
+
+// Print only the receipt from the POS checkout dialog.
+@media print {
+  body * { visibility: hidden; }
+  #receipt, #receipt * { visibility: visible; }
+  #receipt { position: absolute; inset: 0 auto auto 0; width: 80mm; border: 0; }
+}
